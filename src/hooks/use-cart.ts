@@ -11,54 +11,36 @@ export const useCart = create<CartState>()(
       timeSlotId: null,
 
       addItem: (item) => {
-        set((state) => {
-          const existing = state.items.find((i) => i.menuItemId === item.menuItemId)
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.menuItemId === item.menuItemId
-                  ? { ...i, quantity: i.quantity + 1 }
-                  : i
-              ),
-            }
-          }
-          return { items: [...state.items, { ...item, quantity: 1 }] }
-        })
+        set((state) => ({
+          items: [
+            ...state.items,
+            { ...item, cartItemId: crypto.randomUUID(), quantity: 1 },
+          ],
+        }))
       },
 
-      removeItem: (menuItemId) => {
-        set((state) => {
-          const existing = state.items.find((i) => i.menuItemId === menuItemId)
-          if (existing && existing.quantity > 1) {
-            return {
-              items: state.items.map((i) =>
-                i.menuItemId === menuItemId
-                  ? { ...i, quantity: i.quantity - 1 }
-                  : i
-              ),
-            }
-          }
-          return { items: state.items.filter((i) => i.menuItemId !== menuItemId) }
-        })
+      removeItem: (cartItemId) => {
+        set((state) => ({
+          items: state.items.filter((i) => i.cartItemId !== cartItemId),
+        }))
       },
 
-      updateQuantity: (menuItemId, quantity) => {
+      removeLastItem: (menuItemId) => {
         set((state) => {
-          if (quantity <= 0) {
-            return { items: state.items.filter((i) => i.menuItemId !== menuItemId) }
-          }
+          const lastIndex = state.items.findLastIndex(
+            (i) => i.menuItemId === menuItemId
+          )
+          if (lastIndex === -1) return state
           return {
-            items: state.items.map((i) =>
-              i.menuItemId === menuItemId ? { ...i, quantity } : i
-            ),
+            items: state.items.filter((_, idx) => idx !== lastIndex),
           }
         })
       },
 
-      addTopping: (menuItemId, topping) => {
+      addTopping: (cartItemId, topping) => {
         set((state) => ({
           items: state.items.map((i) => {
-            if (i.menuItemId !== menuItemId) return i
+            if (i.cartItemId !== cartItemId) return i
             const current = i.toppings ?? []
             if (current.length >= MAX_TOPPINGS_PER_PIZZA) return i
             if (current.some((t) => t.menuItemId === topping.menuItemId)) return i
@@ -67,10 +49,10 @@ export const useCart = create<CartState>()(
         }))
       },
 
-      removeTopping: (menuItemId, toppingMenuItemId) => {
+      removeTopping: (cartItemId, toppingMenuItemId) => {
         set((state) => ({
           items: state.items.map((i) => {
-            if (i.menuItemId !== menuItemId) return i
+            if (i.cartItemId !== cartItemId) return i
             return {
               ...i,
               toppings: (i.toppings ?? []).filter((t) => t.menuItemId !== toppingMenuItemId),
@@ -90,22 +72,22 @@ export const useCart = create<CartState>()(
       getTotalPrice: () => {
         return get().items.reduce((sum, item) => {
           const toppingsPrice = (item.toppings ?? []).reduce((ts, t) => ts + t.price, 0)
-          return sum + (item.price + toppingsPrice) * item.quantity
+          return sum + item.price + toppingsPrice
         }, 0)
       },
 
       getTotalItems: () => {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0)
+        return get().items.length
       },
 
       getPizzaCount: () => {
-        return get()
-          .items.filter((item) => item.categoryName !== PRILOHA_CATEGORY_NAME)
-          .reduce((sum, item) => sum + item.quantity, 0)
+        return get().items.filter((item) => item.categoryName !== PRILOHA_CATEGORY_NAME).length
       },
     }),
     {
       name: 'pizza-cart',
+      version: 2,
+      migrate: () => ({ items: [], pizzaDayId: null, timeSlotId: null }),
     }
   )
 )

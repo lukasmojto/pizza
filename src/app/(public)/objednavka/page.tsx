@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation'
 export default function CheckoutPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const { items, pizzaDayId, timeSlotId, removeItem, updateQuantity, getTotalPrice, clearCart, getPizzaCount } = useCart()
+  const { items, pizzaDayId, timeSlotId, removeItem, getTotalPrice, clearCart, getPizzaCount } = useCart()
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -82,13 +82,13 @@ export default function CheckoutPage() {
         menuItemId: item.menuItemId,
         itemName: item.name,
         itemPrice: item.price,
-        quantity: item.quantity,
+        quantity: 1,
       }
       const toppingItems = (item.toppings ?? []).map((t) => ({
         menuItemId: t.menuItemId,
         itemName: t.name,
         itemPrice: t.price,
-        quantity: item.quantity,
+        quantity: 1,
       }))
       return [mainItem, ...toppingItems]
     })
@@ -127,26 +127,17 @@ export default function CheckoutPage() {
               <h2 className="mb-4 text-lg font-semibold">Položky ({items.length})</h2>
               <div className="space-y-3">
                 {items.map((item) => (
-                  <div key={item.menuItemId} className="rounded-lg border p-3">
+                  <div key={item.cartItemId} className="rounded-lg border p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">{item.name}</p>
-                        <p className="text-sm text-gray-500">{formatPrice(item.price)} / ks</p>
+                        <p className="text-sm text-gray-500">{formatPrice(item.price)}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <select
-                          value={item.quantity}
-                          onChange={(e) => updateQuantity(item.menuItemId, Number(e.target.value))}
-                          className="rounded border px-2 py-1 text-sm"
-                        >
-                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                            <option key={n} value={n}>{n}</option>
-                          ))}
-                        </select>
                         <p className="w-20 text-right font-medium">
-                          {formatPrice(item.price * item.quantity)}
+                          {formatPrice(item.price)}
                         </p>
-                        <button onClick={() => updateQuantity(item.menuItemId, 0)} className="text-red-400 hover:text-red-600">
+                        <button onClick={() => removeItem(item.cartItemId)} className="text-red-400 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -156,7 +147,7 @@ export default function CheckoutPage() {
                         {item.toppings.map((t) => (
                           <div key={t.menuItemId} className="flex justify-between text-sm text-gray-500">
                             <span>+ {t.name}</span>
-                            <span>{formatPrice(t.price * item.quantity)}</span>
+                            <span>{formatPrice(t.price)}</span>
                           </div>
                         ))}
                       </div>

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import type { TimeSlot, MenuItem, Category, CartTopping } from '@/types'
+import type { TimeSlot, MenuItem, Category, CartTopping, CartItem } from '@/types'
 
 interface CategoryWithItems extends Category {
   menu_items: MenuItem[]
@@ -22,9 +22,9 @@ interface Props {
   categories: CategoryWithItems[]
 }
 
-function ToppingPicker({ pizzaMenuItemId, toppingItems }: { pizzaMenuItemId: string; toppingItems: MenuItem[] }) {
+function ToppingPicker({ cartItemId, label, toppingItems }: { cartItemId: string; label?: string; toppingItems: MenuItem[] }) {
   const { items, addTopping, removeTopping } = useCart()
-  const cartItem = items.find((i) => i.menuItemId === pizzaMenuItemId)
+  const cartItem = items.find((i) => i.cartItemId === cartItemId)
   const currentToppings = cartItem?.toppings ?? []
   const isMaxReached = currentToppings.length >= MAX_TOPPINGS_PER_PIZZA
 
@@ -33,6 +33,7 @@ function ToppingPicker({ pizzaMenuItemId, toppingItems }: { pizzaMenuItemId: str
   return (
     <div className="mt-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3">
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        {label && <span className="mr-1">{label}</span>}
         Prílohy ({currentToppings.length}/{MAX_TOPPINGS_PER_PIZZA})
       </p>
       <div className="space-y-1">
@@ -46,9 +47,9 @@ function ToppingPicker({ pizzaMenuItemId, toppingItems }: { pizzaMenuItemId: str
               disabled={isDisabled}
               onClick={() => {
                 if (isSelected) {
-                  removeTopping(pizzaMenuItemId, topping.id)
+                  removeTopping(cartItemId, topping.id)
                 } else {
-                  addTopping(pizzaMenuItemId, {
+                  addTopping(cartItemId, {
                     menuItemId: topping.id,
                     name: topping.name,
                     price: topping.price,
@@ -81,9 +82,9 @@ function ToppingPicker({ pizzaMenuItemId, toppingItems }: { pizzaMenuItemId: str
 }
 
 function MenuItemCard({ item, categoryName, toppingItems }: { item: MenuItem; categoryName: string; toppingItems?: MenuItem[] }) {
-  const { items, addItem, removeItem } = useCart()
-  const cartItem = items.find((i) => i.menuItemId === item.id)
-  const quantity = cartItem?.quantity ?? 0
+  const { items, addItem, removeLastItem } = useCart()
+  const cartEntries = items.filter((i) => i.menuItemId === item.id)
+  const quantity = cartEntries.length
 
   return (
     <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -134,7 +135,7 @@ function MenuItemCard({ item, categoryName, toppingItems }: { item: MenuItem; ca
                   variant="outline"
                   size="icon"
                   className="h-8 w-8"
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => removeLastItem(item.id)}
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -160,7 +161,14 @@ function MenuItemCard({ item, categoryName, toppingItems }: { item: MenuItem; ca
         </div>
       </div>
       {toppingItems && quantity > 0 && (
-        <ToppingPicker pizzaMenuItemId={item.id} toppingItems={toppingItems} />
+        cartEntries.map((entry, idx) => (
+          <ToppingPicker
+            key={entry.cartItemId}
+            cartItemId={entry.cartItemId}
+            label={quantity > 1 ? `#${idx + 1}` : undefined}
+            toppingItems={toppingItems}
+          />
+        ))
       )}
     </div>
   )
@@ -271,13 +279,13 @@ export function PizzaDayClient({ pizzaDayId, initialSlots, categories }: Props) 
               </h3>
               <div className="mt-3 space-y-2">
                 {items.map((item) => (
-                  <div key={item.menuItemId}>
+                  <div key={item.cartItemId}>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">
-                        {item.quantity}x {item.name}
+                        1x {item.name}
                       </span>
                       <span className="font-medium">
-                        {formatPrice(item.price * item.quantity)}
+                        {formatPrice(item.price)}
                       </span>
                     </div>
                     {item.toppings && item.toppings.length > 0 && (
@@ -285,7 +293,7 @@ export function PizzaDayClient({ pizzaDayId, initialSlots, categories }: Props) 
                         {item.toppings.map((t) => (
                           <div key={t.menuItemId} className="flex justify-between text-xs text-gray-400">
                             <span>+ {t.name}</span>
-                            <span>{formatPrice(t.price * item.quantity)}</span>
+                            <span>{formatPrice(t.price)}</span>
                           </div>
                         ))}
                       </div>

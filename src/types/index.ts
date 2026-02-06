@@ -18,6 +18,7 @@ export interface CartTopping {
 }
 
 export interface CartItem {
+  cartItemId: string
   menuItemId: string
   name: string
   price: number
@@ -30,12 +31,12 @@ export interface CartState {
   items: CartItem[]
   pizzaDayId: string | null
   timeSlotId: string | null
-  addItem: (item: Omit<CartItem, 'quantity'>) => void
-  removeItem: (menuItemId: string) => void
-  updateQuantity: (menuItemId: string, quantity: number) => void
+  addItem: (item: Omit<CartItem, 'quantity' | 'cartItemId' | 'toppings'>) => void
+  removeItem: (cartItemId: string) => void
+  removeLastItem: (menuItemId: string) => void
   setTimeSlot: (pizzaDayId: string, timeSlotId: string) => void
-  addTopping: (menuItemId: string, topping: CartTopping) => void
-  removeTopping: (menuItemId: string, toppingMenuItemId: string) => void
+  addTopping: (cartItemId: string, topping: CartTopping) => void
+  removeTopping: (cartItemId: string, toppingMenuItemId: string) => void
   clearCart: () => void
   getTotalPrice: () => number
   getTotalItems: () => number
