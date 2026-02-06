@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRealtimeSlots } from '@/hooks/use-realtime-slots'
 import { useCart } from '@/hooks/use-cart'
 import { formatPrice, formatTime, isSlotAvailable, getSlotCapacityPercent } from '@/lib/utils'
-import { PRILOHA_CATEGORY_NAME, PIZZA_CATEGORY_NAME, MAX_TOPPINGS_PER_PIZZA } from '@/lib/constants'
+import { PRILOHA_CATEGORY_NAME, MAX_TOPPINGS_PER_PIZZA } from '@/lib/constants'
 import { Clock, ShoppingCart, Plus, Minus, Check } from 'lucide-react'
 import { Button } from '@/components/ui'
 import Link from 'next/link'
@@ -257,7 +257,7 @@ export function PizzaDayClient({ pizzaDayId, initialSlots, categories }: Props) 
                   key={item.id}
                   item={item}
                   categoryName={category.name}
-                  toppingItems={category.name === PIZZA_CATEGORY_NAME && toppingItems.length > 0 ? toppingItems : undefined}
+                  toppingItems={category.name.toLowerCase().startsWith('pizza') && toppingItems.length > 0 ? toppingItems : undefined}
                 />
               ))}
             </div>
