@@ -330,6 +330,10 @@ create policy "Admin can update orders"
   on orders for update
   using (is_admin());
 
+create policy "Admin can delete orders"
+  on orders for delete
+  using (is_admin());
+
 -- Order items: citanie ak ma pristup k objednavke
 create policy "Anyone can read order items"
   on order_items for select

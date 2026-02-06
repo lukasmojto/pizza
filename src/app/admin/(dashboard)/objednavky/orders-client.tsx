@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { updateOrderStatus } from '@/actions/orders'
+import { updateOrderStatus, deleteOrder } from '@/actions/orders'
 import {
   Button, Select, Input, Card, CardContent,
   Dialog, DialogHeader, DialogContent, DialogFooter,
@@ -64,6 +64,17 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
       toast(result.error, 'error')
     } else {
       toast('Stav objednávky zmenený', 'success')
+      setSelectedOrder(null)
+    }
+  }
+
+  async function handleDelete(orderId: string) {
+    if (!confirm('Naozaj chcete VYMAZAŤ túto objednávku? Táto akcia je nevratná.')) return
+    const result = await deleteOrder(orderId)
+    if (result.error) {
+      toast(result.error, 'error')
+    } else {
+      toast('Objednávka vymazaná', 'success')
       setSelectedOrder(null)
     }
   }
@@ -166,6 +177,7 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
                 <th className="px-4 py-3">Zákazník</th>
                 <th className="px-4 py-3">Deň / Okno</th>
                 <th className="px-4 py-3">Položky</th>
+                <th className="px-4 py-3">Počet pizz</th>
                 <th className="px-4 py-3">Suma</th>
                 <th className="px-4 py-3">Stav</th>
                 <th className="px-4 py-3 text-right">Akcie</th>
@@ -186,6 +198,9 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
                   <td className="px-4 py-3 text-sm text-gray-500">
                     {order.order_items.length} položiek
                   </td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                    {order.pizza_count}
+                  </td>
                   <td className="px-4 py-3 font-medium">
                     {formatPrice(Number(order.total_price))}
                   </td>
@@ -203,7 +218,7 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
               ))}
               {initialOrders.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     Žiadne objednávky
                   </td>
                 </tr>
@@ -278,7 +293,10 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
                 </div>
               </div>
             </DialogContent>
-            <DialogFooter>
+            <DialogFooter className="justify-between">
+              <Button variant="danger" onClick={() => handleDelete(selectedOrder.id)}>
+                Vymazať objednávku
+              </Button>
               <Button variant="outline" onClick={() => setSelectedOrder(null)}>
                 Zavrieť
               </Button>

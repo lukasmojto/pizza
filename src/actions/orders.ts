@@ -108,6 +108,37 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus) {
   return { success: true }
 }
 
+export async function deleteOrder(orderId: string) {
+  const supabase = await createClient()
+
+  // First get the order to check if we need to decrement capacity
+  const { data: order, error: fetchError } = await supabase
+    .from('orders')
+    .select('time_slot_id, pizza_count, status')
+    .eq('id', orderId)
+    .single()
+
+  if (fetchError || !order) {
+    return { error: 'Objednávka nebola nájdená' }
+  }
+
+  // If the order wasn't cancelled, decrement the capacity counter
+  if (order.status !== 'zrusena') {
+    await supabase.rpc('cancel_order', { p_order_id: orderId })
+  }
+
+  // Delete order (order_items cascade automatically)
+  const { error } = await supabase
+    .from('orders')
+    .delete()
+    .eq('id', orderId)
+
+  if (error) return { error: 'Nepodarilo sa vymazať objednávku' }
+
+  revalidatePath('/admin/objednavky')
+  return { success: true }
+}
+
 export async function getOrderStats(pizzaDayId?: string) {
   const supabase = await createClient()
 
