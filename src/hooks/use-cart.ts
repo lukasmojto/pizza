@@ -71,9 +71,7 @@ export const useCart = create<CartState>()(
       },
 
       getPizzaCount: () => {
-        return get().items
-          .filter((item) => item.categoryName === 'Pizzy')
-          .reduce((sum, item) => sum + item.quantity, 0)
+        return get().items.reduce((sum, item) => sum + item.quantity, 0)
       },
     }),
     {

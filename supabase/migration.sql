@@ -153,7 +153,7 @@ begin
   end if;
 
   if v_slot.current_pizza_count + p_pizza_count > v_slot.max_pizzas then
-    return jsonb_build_object('success', false, 'error', 'Nedostatočná kapacita v tomto časovom okne');
+    return jsonb_build_object('success', false, 'error', 'Prekročená maximálna kapacita v tomto časovom okne');
   end if;
 
   -- Vypocitame celkovu cenu
