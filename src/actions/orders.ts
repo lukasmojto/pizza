@@ -49,7 +49,7 @@ export async function getOrder(orderId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('orders')
-    .select('*, order_items(*), time_slots(*), pizza_days(*)')
+    .select('*, order_items(*, menu_items(categories(name))), time_slots(*), pizza_days(*)')
     .eq('id', orderId)
     .single()
 
@@ -65,7 +65,7 @@ export async function getOrders(filters?: {
   const supabase = await createClient()
   let query = supabase
     .from('orders')
-    .select('*, order_items(*), time_slots(*), pizza_days(*)')
+    .select('*, order_items(*, menu_items(categories(name))), time_slots(*), pizza_days(*)')
     .order('created_at', { ascending: false })
 
   if (filters?.pizzaDayId) {

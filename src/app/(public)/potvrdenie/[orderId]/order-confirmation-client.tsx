@@ -5,12 +5,17 @@ import { formatPrice, formatDateSk, formatTime } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from '@/lib/constants'
 import { CheckCircle, Clock, Phone, User, Mail, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { PRILOHA_CATEGORY_NAME } from '@/lib/constants'
 import type { Order, OrderItem, TimeSlot, PizzaDay, OrderStatus } from '@/types'
 import Link from 'next/link'
 import { Button } from '@/components/ui'
 
+interface OrderItemWithCategory extends OrderItem {
+  menu_items: { categories: { name: string } | null } | null
+}
+
 interface OrderWithDetails extends Order {
-  order_items: OrderItem[]
+  order_items: OrderItemWithCategory[]
   time_slots: TimeSlot
   pizza_days: PizzaDay
 }
@@ -88,16 +93,25 @@ export function OrderConfirmationClient({ initialOrder }: Props) {
           )}
 
           <div className="space-y-2 border-t pt-4">
-            {initialOrder.order_items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span className="text-gray-600">
-                  {item.quantity}x {item.item_name}
-                </span>
-                <span className="font-medium">
-                  {formatPrice(item.item_price * item.quantity)}
-                </span>
-              </div>
-            ))}
+            {initialOrder.order_items.map((item) => {
+              const isTopping = item.menu_items?.categories?.name === PRILOHA_CATEGORY_NAME
+              return (
+                <div
+                  key={item.id}
+                  className={cn(
+                    'flex justify-between text-sm',
+                    isTopping && 'ml-4 text-xs'
+                  )}
+                >
+                  <span className={isTopping ? 'text-gray-400' : 'text-gray-600'}>
+                    {isTopping ? '+ ' : `${item.quantity}x `}{item.item_name}
+                  </span>
+                  <span className={isTopping ? 'text-gray-400' : 'font-medium'}>
+                    {formatPrice(item.item_price * item.quantity)}
+                  </span>
+                </div>
+              )
+            })}
             <div className="flex justify-between border-t pt-2 text-lg font-bold">
               <span>Celkom</span>
               <span className="text-red-600">{formatPrice(Number(order.total_price))}</span>

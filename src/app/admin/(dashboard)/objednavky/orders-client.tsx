@@ -11,10 +11,15 @@ import { useToast } from '@/components/ui/toast'
 import { cn, formatPrice, formatDateShort, formatTime } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, ORDER_STATUSES } from '@/lib/constants'
 import { Search, Eye, ShoppingCart, DollarSign, Pizza } from 'lucide-react'
+import { PRILOHA_CATEGORY_NAME } from '@/lib/constants'
 import type { Order, OrderItem, TimeSlot, PizzaDay, OrderStatus } from '@/types'
 
+interface OrderItemWithCategory extends OrderItem {
+  menu_items: { categories: { name: string } | null } | null
+}
+
 interface OrderWithDetails extends Order {
-  order_items: OrderItem[]
+  order_items: OrderItemWithCategory[]
   time_slots: TimeSlot
   pizza_days: PizzaDay
 }
@@ -263,12 +268,25 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
               <div>
                 <p className="mb-2 text-sm font-medium text-gray-500">Položky</p>
                 <div className="space-y-2">
-                  {selectedOrder.order_items.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span>{item.quantity}x {item.item_name}</span>
-                      <span className="font-medium">{formatPrice(item.item_price * item.quantity)}</span>
-                    </div>
-                  ))}
+                  {selectedOrder.order_items.map((item) => {
+                    const isTopping = item.menu_items?.categories?.name === PRILOHA_CATEGORY_NAME
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          'flex justify-between text-sm',
+                          isTopping && 'ml-4 text-xs'
+                        )}
+                      >
+                        <span className={isTopping ? 'text-gray-400' : undefined}>
+                          {isTopping ? '+ ' : `${item.quantity}x `}{item.item_name}
+                        </span>
+                        <span className={isTopping ? 'text-gray-400' : 'font-medium'}>
+                          {formatPrice(item.item_price * item.quantity)}
+                        </span>
+                      </div>
+                    )
+                  })}
                   <div className="flex justify-between border-t pt-2 font-bold">
                     <span>Celkom</span>
                     <span className="text-red-600">{formatPrice(Number(selectedOrder.total_price))}</span>
