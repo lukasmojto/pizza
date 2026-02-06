@@ -11,12 +11,19 @@ export type {
   AdminProfile
 } from './database'
 
+export interface CartTopping {
+  menuItemId: string
+  name: string
+  price: number
+}
+
 export interface CartItem {
   menuItemId: string
   name: string
   price: number
   quantity: number
   categoryName: string
+  toppings?: CartTopping[]
 }
 
 export interface CartState {
@@ -27,6 +34,8 @@ export interface CartState {
   removeItem: (menuItemId: string) => void
   updateQuantity: (menuItemId: string, quantity: number) => void
   setTimeSlot: (pizzaDayId: string, timeSlotId: string) => void
+  addTopping: (menuItemId: string, topping: CartTopping) => void
+  removeTopping: (menuItemId: string, toppingMenuItemId: string) => void
   clearCart: () => void
   getTotalPrice: () => number
   getTotalItems: () => number

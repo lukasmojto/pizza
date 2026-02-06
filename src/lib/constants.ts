@@ -28,3 +28,5 @@ export const ORDER_STATUSES: OrderStatus[] = [
 ]
 
 export const PIZZA_CATEGORY_NAME = 'Pizzy'
+export const PRILOHA_CATEGORY_NAME = 'Príloha'
+export const MAX_TOPPINGS_PER_PIZZA = 3
