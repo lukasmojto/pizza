@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRealtimeSlots } from '@/hooks/use-realtime-slots'
 import { useCart } from '@/hooks/use-cart'
 import { formatPrice, formatTime, isSlotAvailable, getSlotCapacityPercent } from '@/lib/utils'
@@ -7,6 +8,7 @@ import { PRILOHA_CATEGORY_NAME, MAX_TOPPINGS_PER_PIZZA } from '@/lib/constants'
 import { Clock, ShoppingCart, Plus, Minus, Check } from 'lucide-react'
 import { Button } from '@/components/ui'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import type { TimeSlot, MenuItem, Category, CartTopping } from '@/types'
 
@@ -224,7 +226,9 @@ function TimeSlotPicker({
 
 export function PizzaDayClient({ pizzaDayId, initialSlots, categories }: Props) {
   const slots = useRealtimeSlots(pizzaDayId, initialSlots)
-  const { items, getTotalPrice, getTotalItems } = useCart()
+  const router = useRouter()
+  const { items, timeSlotId, getTotalPrice, getTotalItems, getPizzaCount } = useCart()
+  const [capacityError, setCapacityError] = useState<string | null>(null)
   const totalItems = getTotalItems()
   const totalPrice = getTotalPrice()
 
@@ -295,11 +299,36 @@ export function PizzaDayClient({ pizzaDayId, initialSlots, categories }: Props) 
                   </div>
                 </div>
               </div>
-              <Link href="/objednavka">
-                <Button className="mt-4 w-full" size="lg">
-                  Pokračovať k objednávke
-                </Button>
-              </Link>
+              {capacityError && (
+                <p className="mt-3 text-sm text-red-600">{capacityError}</p>
+              )}
+              <Button
+                className="mt-4 w-full"
+                size="lg"
+                onClick={() => {
+                  setCapacityError(null)
+                  if (!timeSlotId) {
+                    setCapacityError('Vyberte najprv časové okno.')
+                    return
+                  }
+                  const selectedSlot = slots.find((s) => s.id === timeSlotId)
+                  if (!selectedSlot) {
+                    setCapacityError('Vybrané časové okno už nie je dostupné.')
+                    return
+                  }
+                  const pizzaCount = getPizzaCount()
+                  const remaining = selectedSlot.max_pizzas - selectedSlot.current_pizza_count
+                  if (pizzaCount > remaining) {
+                    setCapacityError(
+                      `Vo vybranom okne zostáva len ${remaining} voľných miest, ale máte ${pizzaCount} pizz v košíku.`
+                    )
+                    return
+                  }
+                  router.push('/objednavka')
+                }}
+              >
+                Pokračovať k objednávke
+              </Button>
             </div>
           )}
         </div>
