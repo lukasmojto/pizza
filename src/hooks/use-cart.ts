@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CartState } from '@/types'
-import { PRILOHA_CATEGORY_NAME, MAX_TOPPINGS_PER_PIZZA } from '@/lib/constants'
+import { MAX_TOPPINGS_PER_PIZZA } from '@/lib/constants'
 
 export const useCart = create<CartState>()(
   persist(
@@ -81,7 +81,7 @@ export const useCart = create<CartState>()(
       },
 
       getPizzaCount: () => {
-        return get().items.filter((item) => item.categoryName !== PRILOHA_CATEGORY_NAME).length
+        return get().items.filter((item) => item.categoryName.toLowerCase().startsWith('pizza')).length
       },
     }),
     {
