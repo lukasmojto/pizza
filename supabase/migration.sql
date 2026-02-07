@@ -69,6 +69,7 @@ create table orders (
   customer_name text not null,
   customer_phone text not null,
   customer_email text,
+  customer_address text,
   customer_note text,
   status text not null default 'nova' check (status in ('nova', 'potvrdena', 'pripravuje_sa', 'hotova', 'vydana', 'zrusena')),
   total_price numeric(10, 2) not null,
@@ -124,6 +125,7 @@ create or replace function place_order(
   p_customer_name text,
   p_customer_phone text,
   p_customer_email text default null,
+  p_customer_address text default null,
   p_customer_note text default null,
   p_items jsonb default '[]'::jsonb,
   p_pizza_count integer default 0
@@ -162,8 +164,8 @@ begin
   from jsonb_array_elements(p_items) as item;
 
   -- Vytvorime objednavku
-  insert into orders (time_slot_id, pizza_day_id, customer_name, customer_phone, customer_email, customer_note, total_price, pizza_count)
-  values (p_time_slot_id, p_pizza_day_id, p_customer_name, p_customer_phone, p_customer_email, p_customer_note, v_total_price, p_pizza_count)
+  insert into orders (time_slot_id, pizza_day_id, customer_name, customer_phone, customer_email, customer_address, customer_note, total_price, pizza_count)
+  values (p_time_slot_id, p_pizza_day_id, p_customer_name, p_customer_phone, p_customer_email, p_customer_address, p_customer_note, v_total_price, p_pizza_count)
   returning id into v_order_id;
 
   -- Vytvorime polozky objednavky

@@ -49,6 +49,7 @@ export interface PlaceOrderInput {
   customerName: string
   customerPhone: string
   customerEmail?: string
+  customerAddress?: string
   customerNote?: string
   items: {
     menuItemId: string

@@ -10,6 +10,7 @@ export async function placeOrder(input: {
   customerName: string
   customerPhone: string
   customerEmail?: string
+  customerAddress?: string
   customerNote?: string
   items: {
     menuItemId: string
@@ -27,6 +28,7 @@ export async function placeOrder(input: {
     p_customer_name: input.customerName,
     p_customer_phone: input.customerPhone,
     p_customer_email: input.customerEmail || undefined,
+    p_customer_address: input.customerAddress || undefined,
     p_customer_note: input.customerNote || undefined,
     p_items: JSON.parse(JSON.stringify(input.items)),
     p_pizza_count: input.pizzaCount,

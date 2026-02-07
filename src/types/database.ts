@@ -150,6 +150,7 @@ export interface Database {
           customer_name: string
           customer_phone: string
           customer_email: string | null
+          customer_address: string | null
           customer_note: string | null
           status: string
           total_price: number
@@ -164,6 +165,7 @@ export interface Database {
           customer_name: string
           customer_phone: string
           customer_email?: string | null
+          customer_address?: string | null
           customer_note?: string | null
           status?: string
           total_price: number
@@ -178,6 +180,7 @@ export interface Database {
           customer_name?: string
           customer_phone?: string
           customer_email?: string | null
+          customer_address?: string | null
           customer_note?: string | null
           status?: string
           total_price?: number
@@ -280,6 +283,7 @@ export interface Database {
           p_customer_name: string
           p_customer_phone: string
           p_customer_email?: string
+          p_customer_address?: string
           p_customer_note?: string
           p_items?: Json
           p_pizza_count?: number

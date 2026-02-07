@@ -410,6 +410,9 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters, 
                   {selectedOrder.customer_email && (
                     <p className="text-sm text-gray-500">{selectedOrder.customer_email}</p>
                   )}
+                  {selectedOrder.customer_address && (
+                    <p className="text-sm text-gray-500">{selectedOrder.customer_address}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Časové okno</p>

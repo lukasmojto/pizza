@@ -40,6 +40,7 @@ export const checkoutSchema = z.object({
     .email('Neplatný email')
     .optional()
     .or(z.literal('')),
+  customerAddress: z.string().max(500).optional(),
   customerNote: z.string().max(500).optional(),
 })
 

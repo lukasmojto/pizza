@@ -3,7 +3,7 @@
 import { useRealtimeOrder } from '@/hooks/use-realtime-order'
 import { formatPrice, formatDateSk, formatTime } from '@/lib/utils'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS } from '@/lib/constants'
-import { CheckCircle, Clock, Phone, User, Mail, MessageSquare } from 'lucide-react'
+import { CheckCircle, Clock, Phone, User, Mail, MessageSquare, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PRILOHA_CATEGORY_NAME } from '@/lib/constants'
 import type { Order, OrderItem, TimeSlot, PizzaDay, OrderStatus } from '@/types'
@@ -80,6 +80,12 @@ export function OrderConfirmationClient({ initialOrder }: Props) {
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4" />
                   <span>{order.customer_email}</span>
+                </div>
+              )}
+              {order.customer_address && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <span>{order.customer_address}</span>
                 </div>
               )}
             </div>

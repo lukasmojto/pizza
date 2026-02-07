@@ -62,6 +62,7 @@ export default function CheckoutPage() {
       customerName: formData.get('customerName') as string,
       customerPhone: formData.get('customerPhone') as string,
       customerEmail: formData.get('customerEmail') as string,
+      customerAddress: formData.get('customerAddress') as string,
       customerNote: formData.get('customerNote') as string,
     }
 
@@ -99,6 +100,7 @@ export default function CheckoutPage() {
       customerName: parsed.data.customerName,
       customerPhone: parsed.data.customerPhone,
       customerEmail: parsed.data.customerEmail || undefined,
+      customerAddress: parsed.data.customerAddress || undefined,
       customerNote: parsed.data.customerNote || undefined,
       items: orderItems,
       pizzaCount,
@@ -180,6 +182,10 @@ export default function CheckoutPage() {
                 <div>
                   <Label htmlFor="customerEmail">Email</Label>
                   <Input id="customerEmail" name="customerEmail" type="email" error={errors.customerEmail} className="mt-1" />
+                </div>
+                <div>
+                  <Label htmlFor="customerAddress">Adresa</Label>
+                  <Textarea id="customerAddress" name="customerAddress" placeholder="Adresa doručenia..." className="mt-1" />
                 </div>
                 <div>
                   <Label htmlFor="customerNote">Poznámka</Label>
