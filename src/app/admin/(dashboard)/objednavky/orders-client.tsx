@@ -13,7 +13,7 @@ import {
   ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, ORDER_STATUSES,
   PRILOHA_CATEGORY_NAME, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS,
 } from '@/lib/constants'
-import { Search, Eye, ShoppingCart, DollarSign, Pizza, ChevronUp, ChevronDown } from 'lucide-react'
+import { Search, Eye, ShoppingCart, DollarSign, Pizza, ChevronUp, ChevronDown, X } from 'lucide-react'
 import type { Order, OrderItem, TimeSlot, PizzaDay, OrderStatus } from '@/types'
 
 interface OrderItemWithCategory extends OrderItem {
@@ -275,6 +275,17 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters, 
             className="pl-9"
           />
         </div>
+        {(currentFilters.pizzaDayId || currentFilters.status || currentFilters.search || currentFilters.timeSlotId) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/admin/objednavky')}
+            className="gap-1 text-gray-500"
+          >
+            <X className="h-4 w-4" />
+            Reset filtrov
+          </Button>
+        )}
       </div>
 
       {/* Orders table */}
