@@ -61,6 +61,7 @@ export async function getOrders(filters?: {
   pizzaDayId?: string
   status?: string
   search?: string
+  timeSlotId?: string
 }) {
   const supabase = await createClient()
   let query = supabase
@@ -73,6 +74,9 @@ export async function getOrders(filters?: {
   }
   if (filters?.status) {
     query = query.eq('status', filters.status)
+  }
+  if (filters?.timeSlotId) {
+    query = query.eq('time_slot_id', filters.timeSlotId)
   }
   if (filters?.search) {
     query = query.or(

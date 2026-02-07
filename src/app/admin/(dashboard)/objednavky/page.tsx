@@ -1,17 +1,19 @@
 import { getOrders, getOrderStats } from '@/actions/orders'
 import { getPizzaDays } from '@/actions/pizza-days'
+import { getTimeSlots } from '@/actions/time-slots'
 import { OrdersClient } from './orders-client'
 
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pizzaDayId?: string; status?: string; search?: string }>
+  searchParams: Promise<{ pizzaDayId?: string; status?: string; search?: string; timeSlotId?: string }>
 }) {
   const filters = await searchParams
-  const [orders, pizzaDays, stats] = await Promise.all([
+  const [orders, pizzaDays, stats, timeSlots] = await Promise.all([
     getOrders(filters),
     getPizzaDays(),
     getOrderStats(filters.pizzaDayId),
+    filters.pizzaDayId ? getTimeSlots(filters.pizzaDayId) : Promise.resolve([]),
   ])
 
   return (
@@ -25,6 +27,7 @@ export default async function OrdersPage({
         pizzaDays={pizzaDays}
         stats={stats}
         currentFilters={filters}
+        timeSlots={timeSlots}
       />
     </div>
   )

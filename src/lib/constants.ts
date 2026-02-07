@@ -30,3 +30,6 @@ export const ORDER_STATUSES: OrderStatus[] = [
 export const PIZZA_CATEGORY_NAME = 'Pizzy'
 export const PRILOHA_CATEGORY_NAME = 'Príloha'
 export const MAX_TOPPINGS_PER_PIZZA = 3
+
+export const DEFAULT_PAGE_SIZE = 20
+export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const

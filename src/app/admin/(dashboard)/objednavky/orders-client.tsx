@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { updateOrderStatus, deleteOrder } from '@/actions/orders'
 import {
@@ -9,9 +9,11 @@ import {
 } from '@/components/ui'
 import { useToast } from '@/components/ui/toast'
 import { cn, formatPrice, formatDateShort, formatTime } from '@/lib/utils'
-import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, ORDER_STATUSES } from '@/lib/constants'
-import { Search, Eye, ShoppingCart, DollarSign, Pizza } from 'lucide-react'
-import { PRILOHA_CATEGORY_NAME } from '@/lib/constants'
+import {
+  ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, ORDER_STATUSES,
+  PRILOHA_CATEGORY_NAME, DEFAULT_PAGE_SIZE, PAGE_SIZE_OPTIONS,
+} from '@/lib/constants'
+import { Search, Eye, ShoppingCart, DollarSign, Pizza, ChevronUp, ChevronDown } from 'lucide-react'
 import type { Order, OrderItem, TimeSlot, PizzaDay, OrderStatus } from '@/types'
 
 interface OrderItemWithCategory extends OrderItem {
@@ -40,18 +42,67 @@ interface Stats {
   totalPizzas: number
 }
 
+type SortKey = 'customer_name' | 'day_slot' | 'items_count' | 'pizza_count' | 'total_price' | 'status'
+type SortDir = 'asc' | 'desc'
+
 interface Props {
   initialOrders: OrderWithDetails[]
   pizzaDays: PizzaDayWithSlots[]
   stats: Stats | null
-  currentFilters: { pizzaDayId?: string; status?: string; search?: string }
+  currentFilters: { pizzaDayId?: string; status?: string; search?: string; timeSlotId?: string }
+  timeSlots: TimeSlot[]
 }
 
-export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }: Props) {
+function compareOrders(a: OrderWithDetails, b: OrderWithDetails, key: SortKey, dir: SortDir): number {
+  let cmp = 0
+  switch (key) {
+    case 'customer_name':
+      cmp = a.customer_name.localeCompare(b.customer_name, 'sk')
+      break
+    case 'day_slot': {
+      const dateA = a.pizza_days.date + 'T' + a.time_slots.time_from
+      const dateB = b.pizza_days.date + 'T' + b.time_slots.time_from
+      cmp = dateA.localeCompare(dateB)
+      break
+    }
+    case 'items_count':
+      cmp = a.order_items.length - b.order_items.length
+      break
+    case 'pizza_count':
+      cmp = a.pizza_count - b.pizza_count
+      break
+    case 'total_price':
+      cmp = Number(a.total_price) - Number(b.total_price)
+      break
+    case 'status':
+      cmp = a.status.localeCompare(b.status, 'sk')
+      break
+  }
+  return dir === 'asc' ? cmp : -cmp
+}
+
+const SORTABLE_COLUMNS: { label: string; key: SortKey }[] = [
+  { label: 'Zákazník', key: 'customer_name' },
+  { label: 'Deň / Okno', key: 'day_slot' },
+  { label: 'Položky', key: 'items_count' },
+  { label: 'Počet pizz', key: 'pizza_count' },
+  { label: 'Suma', key: 'total_price' },
+  { label: 'Stav', key: 'status' },
+]
+
+export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters, timeSlots }: Props) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [selectedOrder, setSelectedOrder] = useState<OrderWithDetails | null>(null)
+
+  // Sorting state
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())
@@ -60,7 +111,39 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
     } else {
       params.delete(key)
     }
+    // Reset timeSlotId when pizzaDayId changes
+    if (key === 'pizzaDayId') {
+      params.delete('timeSlotId')
+    }
     router.push(`/admin/objednavky?${params.toString()}`)
+  }
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
+    setCurrentPage(1)
+  }
+
+  // Sort data
+  const sortedOrders = useMemo(() => {
+    if (!sortKey) return initialOrders
+    return [...initialOrders].sort((a, b) => compareOrders(a, b, sortKey, sortDir))
+  }, [initialOrders, sortKey, sortDir])
+
+  // Paginate
+  const totalItems = sortedOrders.length
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+  const safePage = Math.min(currentPage, totalPages)
+  const start = (safePage - 1) * pageSize
+  const paginatedOrders = sortedOrders.slice(start, start + pageSize)
+
+  function handlePageSizeChange(newSize: number) {
+    setPageSize(newSize)
+    setCurrentPage(1)
   }
 
   async function handleStatusChange(orderId: string, status: OrderStatus) {
@@ -82,6 +165,13 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
       toast('Objednávka vymazaná', 'success')
       setSelectedOrder(null)
     }
+  }
+
+  function renderSortIcon(key: SortKey) {
+    if (sortKey !== key) return null
+    return sortDir === 'asc'
+      ? <ChevronUp className="ml-1 inline h-4 w-4" />
+      : <ChevronDown className="ml-1 inline h-4 w-4" />
   }
 
   return (
@@ -148,6 +238,20 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
             <option key={d.id} value={d.id}>{formatDateShort(d.date)}</option>
           ))}
         </Select>
+        {currentFilters.pizzaDayId && (
+          <Select
+            value={currentFilters.timeSlotId ?? ''}
+            onChange={(e) => updateFilter('timeSlotId', e.target.value)}
+            className="w-52"
+          >
+            <option value="">Všetky okná</option>
+            {timeSlots.map((slot) => (
+              <option key={slot.id} value={slot.id}>
+                {formatTime(slot.time_from)} - {formatTime(slot.time_to)}
+              </option>
+            ))}
+          </Select>
+        )}
         <Select
           value={currentFilters.status ?? ''}
           onChange={(e) => updateFilter('status', e.target.value)}
@@ -179,17 +283,21 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
           <table className="w-full">
             <thead>
               <tr className="border-b bg-gray-50 text-left text-sm font-medium text-gray-500">
-                <th className="px-4 py-3">Zákazník</th>
-                <th className="px-4 py-3">Deň / Okno</th>
-                <th className="px-4 py-3">Položky</th>
-                <th className="px-4 py-3">Počet pizz</th>
-                <th className="px-4 py-3">Suma</th>
-                <th className="px-4 py-3">Stav</th>
+                {SORTABLE_COLUMNS.map((col) => (
+                  <th
+                    key={col.key}
+                    className="cursor-pointer select-none px-4 py-3 hover:text-gray-700"
+                    onClick={() => handleSort(col.key)}
+                  >
+                    {col.label}
+                    {renderSortIcon(col.key)}
+                  </th>
+                ))}
                 <th className="px-4 py-3 text-right">Akcie</th>
               </tr>
             </thead>
             <tbody className="divide-y">
-              {initialOrders.map((order) => (
+              {paginatedOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3">
                     <p className="font-medium text-gray-900">{order.customer_name}</p>
@@ -221,7 +329,7 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
                   </td>
                 </tr>
               ))}
-              {initialOrders.length === 0 && (
+              {paginatedOrders.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     Žiadne objednávky
@@ -232,6 +340,48 @@ export function OrdersClient({ initialOrders, pizzaDays, stats, currentFilters }
           </table>
         </CardContent>
       </Card>
+
+      {/* Pagination bar */}
+      {totalItems > 0 && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-sm text-gray-500">
+            Zobrazených {start + 1}–{Math.min(start + pageSize, totalItems)} z {totalItems}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+            >
+              Predchádzajúca
+            </Button>
+            <span className="text-sm text-gray-700">
+              {safePage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+            >
+              Nasledujúca
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select
+              value={String(pageSize)}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+              className="w-20"
+            >
+              {PAGE_SIZE_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </Select>
+            <span className="text-sm text-gray-500">na stránku</span>
+          </div>
+        </div>
+      )}
 
       {/* Order detail dialog */}
       <Dialog open={!!selectedOrder} onClose={() => setSelectedOrder(null)} className="max-w-2xl">
