@@ -49,9 +49,56 @@ export const loginSchema = z.object({
   password: z.string().min(6, 'Heslo musí mať aspoň 6 znakov'),
 })
 
+export const registerSchema = z.object({
+  email: z.string().email('Neplatný email'),
+  password: z.string().min(6, 'Heslo musí mať aspoň 6 znakov'),
+  confirmPassword: z.string().min(1, 'Potvrdenie hesla je povinné'),
+  fullName: z.string().min(2, 'Meno musí mať aspoň 2 znaky').max(100),
+  phone: z
+    .string()
+    .regex(/^(\+421|0)[0-9\s]{8,12}$/, 'Neplatný formát telefónneho čísla')
+    .optional()
+    .or(z.literal('')),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Heslá sa nezhodujú',
+  path: ['confirmPassword'],
+})
+
+export const customerLoginSchema = z.object({
+  email: z.string().email('Neplatný email'),
+  password: z.string().min(1, 'Heslo je povinné'),
+})
+
+export const customerProfileSchema = z.object({
+  fullName: z.string().min(2, 'Meno musí mať aspoň 2 znaky').max(100).optional().or(z.literal('')),
+  phone: z
+    .string()
+    .regex(/^(\+421|0)[0-9\s]{8,12}$/, 'Neplatný formát telefónneho čísla')
+    .optional()
+    .or(z.literal('')),
+  address: z.string().max(500).optional().or(z.literal('')),
+})
+
+export const resetPasswordSchema = z.object({
+  email: z.string().email('Neplatný email'),
+})
+
+export const newPasswordSchema = z.object({
+  password: z.string().min(6, 'Heslo musí mať aspoň 6 znakov'),
+  confirmPassword: z.string().min(1, 'Potvrdenie hesla je povinné'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Heslá sa nezhodujú',
+  path: ['confirmPassword'],
+})
+
 export type CategoryInput = z.infer<typeof categorySchema>
 export type MenuItemInput = z.infer<typeof menuItemSchema>
 export type PizzaDayInput = z.infer<typeof pizzaDaySchema>
 export type TimeSlotInput = z.infer<typeof timeSlotSchema>
 export type CheckoutInput = z.infer<typeof checkoutSchema>
 export type LoginInput = z.infer<typeof loginSchema>
+export type RegisterInput = z.infer<typeof registerSchema>
+export type CustomerLoginInput = z.infer<typeof customerLoginSchema>
+export type CustomerProfileInput = z.infer<typeof customerProfileSchema>
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
+export type NewPasswordInput = z.infer<typeof newPasswordSchema>

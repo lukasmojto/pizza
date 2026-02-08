@@ -8,7 +8,8 @@ export type {
   TimeSlot,
   Order,
   OrderItem,
-  AdminProfile
+  AdminProfile,
+  CustomerProfile
 } from './database'
 
 export interface CartTopping {
@@ -58,4 +59,5 @@ export interface PlaceOrderInput {
     quantity: number
   }[]
   pizzaCount: number
+  customerId?: string
 }

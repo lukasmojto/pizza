@@ -152,6 +152,7 @@ export interface Database {
           customer_email: string | null
           customer_address: string | null
           customer_note: string | null
+          customer_id: string | null
           status: string
           total_price: number
           pizza_count: number
@@ -167,6 +168,7 @@ export interface Database {
           customer_email?: string | null
           customer_address?: string | null
           customer_note?: string | null
+          customer_id?: string | null
           status?: string
           total_price: number
           pizza_count: number
@@ -182,6 +184,7 @@ export interface Database {
           customer_email?: string | null
           customer_address?: string | null
           customer_note?: string | null
+          customer_id?: string | null
           status?: string
           total_price?: number
           pizza_count?: number
@@ -271,6 +274,36 @@ export interface Database {
         }
         Relationships: []
       }
+      customer_profiles: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          phone: string | null
+          address: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string | null
+          phone?: string | null
+          address?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          phone?: string | null
+          address?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -287,6 +320,7 @@ export interface Database {
           p_customer_note?: string
           p_items?: Json
           p_pizza_count?: number
+          p_customer_id?: string
         }
         Returns: Json
       }
@@ -319,3 +353,4 @@ export type TimeSlot = Database['public']['Tables']['time_slots']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
 export type OrderItem = Database['public']['Tables']['order_items']['Row']
 export type AdminProfile = Database['public']['Tables']['admin_profiles']['Row']
+export type CustomerProfile = Database['public']['Tables']['customer_profiles']['Row']

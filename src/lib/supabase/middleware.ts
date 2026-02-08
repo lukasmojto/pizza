@@ -52,5 +52,17 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Protect customer routes (/profil, /objednavky)
+  const customerProtectedPaths = ['/profil', '/objednavky']
+  const isCustomerProtected = customerProtectedPaths.some(
+    (path) => request.nextUrl.pathname.startsWith(path)
+  )
+  if (isCustomerProtected && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/prihlasenie'
+    url.searchParams.set('redirect', request.nextUrl.pathname)
+    return NextResponse.redirect(url)
+  }
+
   return supabaseResponse
 }

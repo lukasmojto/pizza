@@ -19,6 +19,7 @@ export async function placeOrder(input: {
     quantity: number
   }[]
   pizzaCount: number
+  customerId?: string
 }) {
   const supabase = await createClient()
 
@@ -32,6 +33,7 @@ export async function placeOrder(input: {
     p_customer_note: input.customerNote || undefined,
     p_items: JSON.parse(JSON.stringify(input.items)),
     p_pizza_count: input.pizzaCount,
+    p_customer_id: input.customerId || undefined,
   })
 
   if (error) {
