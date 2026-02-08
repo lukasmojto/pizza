@@ -38,6 +38,7 @@ create policy "Customer can insert own profile"
   with check (id = auth.uid());
 
 -- Trigger: automaticky vytvorí profil pri registrácii (preskočí adminov)
+-- EXCEPTION handler zabraňuje rollbacku user creation ak profil insert zlyhá
 create or replace function handle_new_customer()
 returns trigger
 language plpgsql
@@ -49,13 +50,18 @@ begin
     return new;
   end if;
 
-  insert into customer_profiles (id, email, full_name)
+  insert into customer_profiles (id, email, full_name, phone)
   values (
     new.id,
     new.email,
-    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name')
+    coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
+    new.raw_user_meta_data->>'phone'
   );
   return new;
+exception
+  when others then
+    -- Nezablokuje vytvorenie usera, profil sa vytvorí neskôr cez aplikáciu
+    return new;
 end;
 $$;
 

@@ -39,32 +39,41 @@ export async function customerRegisterAction(
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signUp({
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
       data: {
         full_name: parsed.data.fullName,
+        phone: parsed.data.phone || null,
       },
     },
   })
 
   if (error) {
-    if (error.message.includes('already registered')) {
+    if (error.message.includes('already registered') || error.message.includes('already been registered')) {
       return { error: 'Účet s týmto emailom už existuje' }
     }
-    return { error: 'Nepodarilo sa vytvoriť účet' }
+    console.error('SignUp error:', error.message, error.status)
+    return { error: `Nepodarilo sa vytvoriť účet: ${error.message}` }
   }
 
-  // Update profile with phone if provided
-  if (parsed.data.phone) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await supabase
-        .from('customer_profiles')
-        .update({ phone: parsed.data.phone })
-        .eq('id', user.id)
-    }
+  // If email confirmation is enabled, user won't have a session yet
+  const needsConfirmation = signUpData.user && !signUpData.session
+  if (needsConfirmation) {
+    return { success: 'Účet bol vytvorený. Skontrolujte si email a potvrďte registráciu.' }
+  }
+
+  // Ensure profile row exists (trigger may have failed)
+  if (signUpData.user) {
+    await supabase
+      .from('customer_profiles')
+      .upsert({
+        id: signUpData.user.id,
+        email: parsed.data.email,
+        full_name: parsed.data.fullName,
+        phone: parsed.data.phone || null,
+      })
   }
 
   redirect('/domov')

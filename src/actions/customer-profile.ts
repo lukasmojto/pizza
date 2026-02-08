@@ -20,12 +20,14 @@ export async function getCustomerProfile(): Promise<CustomerProfile | null> {
   // If logged in but no profile row exists, create one (e.g. OAuth user or pre-migration user)
   if (!data) {
     const fullName = user.user_metadata?.full_name || user.user_metadata?.name || null
+    const phone = user.user_metadata?.phone || null
     const { data: newProfile } = await supabase
       .from('customer_profiles')
       .upsert({
         id: user.id,
         email: user.email!,
         full_name: fullName,
+        phone,
       })
       .select()
       .single()
