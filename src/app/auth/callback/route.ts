@@ -11,23 +11,31 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // For Google OAuth: update full_name from Google metadata if not set
+      // Ensure customer_profiles row exists (trigger may not fire for OAuth)
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const googleName = user.user_metadata?.full_name || user.user_metadata?.name
-        if (googleName) {
-          const { data: profile } = await supabase
-            .from('customer_profiles')
-            .select('full_name')
-            .eq('id', user.id)
-            .single()
+        const { data: profile } = await supabase
+          .from('customer_profiles')
+          .select('id, full_name')
+          .eq('id', user.id)
+          .single()
 
-          if (profile && !profile.full_name) {
-            await supabase
-              .from('customer_profiles')
-              .update({ full_name: googleName })
-              .eq('id', user.id)
-          }
+        if (!profile) {
+          // Create profile row if it doesn't exist
+          await supabase
+            .from('customer_profiles')
+            .upsert({
+              id: user.id,
+              email: user.email!,
+              full_name: googleName || null,
+            })
+        } else if (googleName && !profile.full_name) {
+          // Update name from Google metadata if not set
+          await supabase
+            .from('customer_profiles')
+            .update({ full_name: googleName })
+            .eq('id', user.id)
         }
       }
 

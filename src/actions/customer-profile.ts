@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import { customerProfileSchema } from '@/lib/validators'
 import type { CustomerProfile } from '@/types'
 
@@ -15,6 +16,22 @@ export async function getCustomerProfile(): Promise<CustomerProfile | null> {
     .select('*')
     .eq('id', user.id)
     .single()
+
+  // If logged in but no profile row exists, create one (e.g. OAuth user or pre-migration user)
+  if (!data) {
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || null
+    const { data: newProfile } = await supabase
+      .from('customer_profiles')
+      .upsert({
+        id: user.id,
+        email: user.email!,
+        full_name: fullName,
+      })
+      .select()
+      .single()
+
+    return newProfile
+  }
 
   return data
 }
@@ -65,6 +82,7 @@ export async function updateCustomerProfile(
     return { error: 'Nepodarilo sa aktualizovať profil' }
   }
 
+  revalidatePath('/profil')
   return { success: 'Profil bol aktualizovaný' }
 }
 

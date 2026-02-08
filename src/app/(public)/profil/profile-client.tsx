@@ -40,7 +40,7 @@ export function ProfileClient({ profile }: ProfileClientProps) {
             </div>
           )}
 
-          <form action={formAction} className="space-y-4">
+          <form key={profile.updated_at} action={formAction} className="space-y-4">
             <div>
               <Label htmlFor="email">Email</Label>
               <Input
